@@ -1,6 +1,7 @@
 import { c as _c } from "react/compiler-runtime";
 import React from 'react';
 import { useIsInsideModal } from '../../context/modalContext.js';
+import { usePromptLayoutColumns } from '../../context/promptLayoutContext.js';
 import { Box } from '../../ink.js';
 import type { Theme } from '../../utils/theme.js';
 import { Divider } from './Divider.js';
@@ -10,6 +11,7 @@ type PaneProps = {
    * Theme color for the top border line.
    */
   color?: keyof Theme;
+  width?: number;
 };
 
 /**
@@ -31,11 +33,13 @@ type PaneProps = {
  * </Pane>
  */
 export function Pane(t0) {
-  const $ = _c(9);
+  const $ = _c(13);
   const {
     children,
-    color
+    color,
+    width
   } = t0;
+  const promptLayoutColumns = usePromptLayoutColumns();
   if (useIsInsideModal()) {
     let t1;
     if ($[0] !== children) {
@@ -47,30 +51,32 @@ export function Pane(t0) {
     }
     return t1;
   }
+  const dividerWidth = width ?? promptLayoutColumns ?? undefined;
   let t1;
-  if ($[2] !== color) {
-    t1 = <Divider color={color} />;
+  if ($[2] !== color || $[3] !== dividerWidth) {
+    t1 = <Divider color={color} width={dividerWidth} />;
     $[2] = color;
-    $[3] = t1;
+    $[3] = dividerWidth;
+    $[4] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[4];
   }
   let t2;
-  if ($[4] !== children) {
+  if ($[5] !== children) {
     t2 = <Box flexDirection="column" paddingX={2}>{children}</Box>;
-    $[4] = children;
-    $[5] = t2;
+    $[5] = children;
+    $[6] = t2;
   } else {
-    t2 = $[5];
+    t2 = $[6];
   }
   let t3;
-  if ($[6] !== t1 || $[7] !== t2) {
+  if ($[7] !== t1 || $[8] !== t2) {
     t3 = <Box flexDirection="column" paddingTop={1}>{t1}{t2}</Box>;
-    $[6] = t1;
-    $[7] = t2;
-    $[8] = t3;
+    $[7] = t1;
+    $[8] = t2;
+    $[9] = t3;
   } else {
-    t3 = $[8];
+    t3 = $[9];
   }
   return t3;
 }

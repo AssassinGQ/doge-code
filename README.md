@@ -259,6 +259,49 @@ doge
 bun run version
 ```
 
+## Buddy 宠物系统用法
+
+这个 Fork 内置了一个名为 [`Buddy`](README.md) 的小企鹅宠物，会显示在输入框旁边，并在部分对话后冒泡吐槽或打气。
+
+常用命令如下：
+
+- 启用 / 唤出 Buddy：
+
+```bash
+/buddy
+```
+
+- 摸摸 Buddy（触发爱心动画）：
+
+```bash
+/buddy pet
+```
+
+- 临时关闭 Buddy（静音，不再显示冒泡）：
+
+```bash
+/buddy mute
+```
+
+- 重新打开 Buddy：
+
+```bash
+/buddy unmute
+```
+
+- 查看命令帮助：
+
+```bash
+/buddy help
+```
+
+补充说明：
+
+- 当前这份 Fork 已默认带一个可用的 Buddy，通常启动后就是开启状态
+- [`/buddy mute`](README.md) 是“关闭显示和冒泡”，不是删除宠物数据
+- [`/buddy unmute`](README.md) 会恢复显示
+- 如果你在聊天里直接提到 `Buddy`，它有时会自己在气泡里回应
+
 ## 说明与免责声明
 
 - 本仓库是 [`Claude Code`](README.md) 的 Fork：[`Doge Code`](README.md)
