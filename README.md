@@ -1,6 +1,7 @@
 # Doge Code
 
 > Claude Code 的一个 Fork。不是官方正史，而是平行世界番外篇；不是萌豚整活仓库，而是“认真修、顺手发癫一点点”的工程分支。
+
 > **免责声明**：本项目仅供个人学习与技术研究，不得用于任何商业用途或非法用途。所有原始源码版权归 [Anthropic](https://www.anthropic.com) 所有。
 
 [![Fork](https://img.shields.io/badge/Fork-Claude%20Code-f59e0b)](README.md)
