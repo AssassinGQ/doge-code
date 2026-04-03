@@ -26,6 +26,11 @@ import {
 } from 'src/utils/model/providers.js'
 import { readCustomApiStorage } from 'src/utils/customApiStorage.js'
 import {
+  convertAnthropicRequestToGemini,
+  createAnthropicStreamFromGemini,
+  createGeminiCompatStream,
+} from './geminiCompat.js'
+import {
   convertAnthropicRequestToOpenAI,
   createAnthropicStreamFromOpenAI,
   createOpenAICompatStream,
@@ -1822,6 +1827,40 @@ async function* queryModel(
         }
         const compatProvider = customApiConfig.provider ?? 'anthropic'
         const openAICompatMode = customApiConfig.openaiCompatMode ?? 'chat_completions'
+        if (compatProvider === 'gemini') {
+          const geminiRequest = convertAnthropicRequestToGemini({
+            model: params.model,
+            system: params.system,
+            messages: params.messages,
+            tools: params.tools,
+            tool_choice: params.tool_choice,
+            temperature: params.temperature,
+            max_tokens: params.max_tokens,
+          })
+          if (!geminiRequest.contents || geminiRequest.contents.length === 0) {
+            throw new Error(
+              `[claude.ts] gemini compat request has no contents; source=${options.querySource} model=${params.model}`,
+            )
+          }
+          const reader = await createGeminiCompatStream(
+            {
+              apiKey: process.env.DOGE_API_KEY || '',
+              baseURL: process.env.ANTHROPIC_BASE_URL || '',
+              headers: clientRequestId
+                ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
+                : undefined,
+              fetch: globalThis.fetch,
+            },
+            process.env.ANTHROPIC_MODEL?.trim() || params.model,
+            geminiRequest,
+            signal,
+          )
+          queryCheckpoint('query_response_headers_received')
+          return createAnthropicStreamFromGemini({
+            reader,
+            model: params.model,
+          }) as unknown as Stream<BetaRawMessageStreamEvent>
+        }
         if (compatProvider === 'openai') {
           const compatConfig = {
             apiKey: process.env.DOGE_API_KEY || '',

@@ -25,8 +25,12 @@ export function isOpenAICompatProvider(): boolean {
   return readCustomApiStorage().provider === 'openai'
 }
 
+export function isGeminiCompatProvider(): boolean {
+  return readCustomApiStorage().provider === 'gemini'
+}
+
 export function modelSupportsNoThinking(model: string): boolean {
-  return modelSupportsEffort(model) && isOpenAICompatProvider()
+  return modelSupportsEffort(model) && (isOpenAICompatProvider() || isGeminiCompatProvider())
 }
 
 // @[MODEL LAUNCH]: Add the new model to the allowlist if it supports the effort parameter.

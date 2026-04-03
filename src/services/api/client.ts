@@ -324,10 +324,12 @@ export async function getAnthropicClient({
   return new Anthropic(clientConfig)
 }
 
-function getGlobalCompatProvider(): 'anthropic' | 'openai' {
+function getGlobalCompatProvider(): 'anthropic' | 'openai' | 'gemini' {
   return process.env.CLAUDE_CODE_COMPATIBLE_API_PROVIDER === 'openai'
     ? 'openai'
-    : 'anthropic'
+    : process.env.CLAUDE_CODE_COMPATIBLE_API_PROVIDER === 'gemini'
+      ? 'gemini'
+      : 'anthropic'
 }
 
 async function configureApiKeyHeaders(

@@ -26,7 +26,7 @@ type Props = {
   mode?: 'login' | 'setup-token';
   forceLoginMethod?: 'claudeai' | 'console';
 };
-type CompatibleApiProvider = 'anthropic' | 'openai';
+type CompatibleApiProvider = 'anthropic' | 'openai' | 'gemini';
 type OpenAICompatMode = 'chat_completions' | 'responses';
 type OAuthStatus = {
   state: 'idle';
@@ -296,7 +296,11 @@ export function ConsoleOAuthFlow({
       state: 'success'
     });
     void sendNotification({
-      message: safeOauthStatus.provider === 'openai' ? 'OpenAI-compatible endpoint saved' : 'Anthropic-compatible endpoint saved',
+      message: safeOauthStatus.provider === 'openai'
+        ? 'OpenAI-compatible endpoint saved'
+        : safeOauthStatus.provider === 'gemini'
+          ? 'Gemini endpoint saved'
+          : 'Anthropic-compatible endpoint saved',
       notificationType: 'auth_success'
     }, terminal);
   }, [safeOauthStatus, persistCustomEndpoint, terminal]);
@@ -473,7 +477,7 @@ export function ConsoleOAuthFlow({
             </Box>
           </Box>}
       <Box paddingLeft={1} flexDirection="column" gap={1}>
-        <OAuthStatusMessage oauthStatus={safeOauthStatus} mode={mode} startingMessage={startingMessage} forcedMethodMessage={forcedMethodMessage} showPastePrompt={showPastePrompt} pastedCode={pastedCode} setPastedCode={setPastedCode} cursorOffset={cursorOffset} setCursorOffset={setCursorOffset} textInputColumns={textInputColumns} handleSubmitCode={handleSubmitCode} setOAuthStatus={setOAuthStatus} setLoginWithClaudeAi={setLoginWithClaudeAi} customBaseURL={customBaseURL} customApiKey={customApiKey} customModel={customModel} setCustomBaseURL={setCustomBaseURL} setCustomApiKey={setCustomApiKey} setCustomModel={setCustomModel} isCustomInputPasting={isCustomInputPasting} setIsCustomInputPasting={setIsCustomInputPasting} handleSubmitCustomConfig={handleSubmitCustomConfig} startCompatibleApiConfig={startCompatibleApiConfig} compatibleApiProvider={compatibleApiProvider} />
+        <OAuthStatusMessage oauthStatus={safeOauthStatus} mode={mode} startingMessage={startingMessage} forcedMethodMessage={forcedMethodMessage} showPastePrompt={showPastePrompt} pastedCode={pastedCode} setPastedCode={setPastedCode} cursorOffset={cursorOffset} setCursorOffset={setCursorOffset} textInputColumns={textInputColumns} handleSubmitCode={handleSubmitCode} setOAuthStatus={setOAuthStatus} setLoginWithClaudeAi={setLoginWithClaudeAi} customBaseURL={customBaseURL} customApiKey={customApiKey} customModel={customModel} setCustomBaseURL={setCustomBaseURL} setCustomApiKey={setCustomApiKey} setCustomModel={setCustomModel} isCustomInputPasting={isCustomInputPasting} setIsCustomInputPasting={setIsCustomInputPasting} handleSubmitCustomConfig={handleSubmitCustomConfig} startCompatibleApiConfig={startCompatibleApiConfig} compatibleApiProvider={compatibleApiProvider} openAICompatMode={openAICompatMode} />
       </Box>
     </Box>;
 }
@@ -502,6 +506,7 @@ type OAuthStatusMessageProps = {
   handleSubmitCustomConfig: (value: string) => void;
   startCompatibleApiConfig: (provider: CompatibleApiProvider) => void;
   compatibleApiProvider: CompatibleApiProvider;
+  openAICompatMode: OpenAICompatMode;
 };
 function OAuthStatusMessage(t0) {
   const $ = _c(51);
@@ -529,12 +534,13 @@ function OAuthStatusMessage(t0) {
     setIsCustomInputPasting,
     handleSubmitCustomConfig,
     startCompatibleApiConfig,
-    compatibleApiProvider
+    compatibleApiProvider,
+    openAICompatMode
   } = t0;
   switch (oauthStatus.state) {
     case "provider_select":
       {
-        return <Box flexDirection="column" gap={1} marginTop={1}><Text bold={true}>Select Model API Format</Text><Text>Claude Code internally maintains the Anthropic Messages protocol. For OpenAI-compatible endpoints, you can route those internal Messages requests through either Chat Completions or Responses and convert the return stream back into Messages events.</Text><Box><Select options={[{
+        return <Box flexDirection="column" gap={1} marginTop={1}><Text bold={true}>Select Model API Format</Text><Text>Claude Code internally maintains the Anthropic Messages protocol. For OpenAI-compatible endpoints, you can route those internal Messages requests through either Chat Completions or Responses and convert the return stream back into Messages events. Gemini uses a native adapter that maps Anthropic Messages semantics onto the Gemini API.</Text><Box><Select options={[{
           label: <Text>Anthropic-like API · <Text dimColor={true}>Use the interface compatible with `/v1/messages` directly.</Text></Text>,
           value: "anthropic"
         }, {
@@ -543,6 +549,9 @@ function OAuthStatusMessage(t0) {
         }, {
           label: <Text>OpenAI Responses-like API · <Text dimColor={true}>Convert Anthropic Messages to Responses</Text></Text>,
           value: "openai:responses"
+        }, {
+          label: <Text>Gemini API · <Text dimColor={true}>Convert Anthropic Messages to native Gemini streaming</Text></Text>,
+          value: "gemini"
         }]} onChange={value_0 => {
           if (value_0 === 'anthropic') {
             startCompatibleApiConfig('anthropic');
@@ -552,21 +561,27 @@ function OAuthStatusMessage(t0) {
             startCompatibleApiConfig('openai', 'responses');
             return;
           }
+          if (value_0 === 'gemini') {
+            startCompatibleApiConfig('gemini');
+            return;
+          }
           startCompatibleApiConfig('openai', 'chat_completions');
         }} /></Box></Box>;
       }
     case "custom_config":
       {
         const isOpenAIProvider = oauthStatus.provider === 'openai';
+        const isGeminiProvider = oauthStatus.provider === 'gemini';
         const currentOpenAICompatMode = oauthStatus.openaiCompatMode ?? openAICompatMode;
         const openAIFormatLabel = currentOpenAICompatMode === 'responses' ? 'OpenAI Responses compatible format' : 'OpenAI Chat Completions compatible format';
-        const openAIPathSuffix = currentOpenAICompatMode === 'responses' ? '/responses' : '/chat/completions';
-        const label = oauthStatus.step === 'baseURL' ? isOpenAIProvider ? `Enter the ${currentOpenAICompatMode === 'responses' ? 'OpenAI Responses' : 'OpenAI Chat Completions'} compatible base URL:` : 'Enter the Anthropic Messages compatible base URL:' : oauthStatus.step === 'apiKey' ? isOpenAIProvider ? 'Input OpenAI API Key:' : 'Input Anthropic API Key:' : 'Enter the default model name:';
+        const currentProviderLabel = isOpenAIProvider ? openAIFormatLabel : isGeminiProvider ? 'Gemini native API format' : 'Anthropic Messages compatible format';
+        const pathSuffix = isOpenAIProvider ? currentOpenAICompatMode === 'responses' ? '/responses' : '/chat/completions' : isGeminiProvider ? '/models/{model}:streamGenerateContent' : '/v1/messages';
+        const label = oauthStatus.step === 'baseURL' ? isOpenAIProvider ? `Enter the ${currentOpenAICompatMode === 'responses' ? 'OpenAI Responses' : 'OpenAI Chat Completions'} compatible base URL:` : isGeminiProvider ? 'Enter the Gemini API base URL:' : 'Enter the Anthropic Messages compatible base URL:' : oauthStatus.step === 'apiKey' ? isOpenAIProvider ? 'Input OpenAI API Key:' : isGeminiProvider ? 'Input Gemini API Key:' : 'Input Anthropic API Key:' : 'Enter the default model name:';
         const value = oauthStatus.step === 'baseURL' ? customBaseURL : oauthStatus.step === 'apiKey' ? customApiKey : customModel;
         const onChange = oauthStatus.step === 'baseURL' ? setCustomBaseURL : oauthStatus.step === 'apiKey' ? setCustomApiKey : setCustomModel;
-        const placeholder = oauthStatus.step === 'baseURL' ? isOpenAIProvider ? 'http(s)://your-openai-compatible-endpoint.example.com' : 'http(s)://your-anthropic-compatible-endpoint.example.com' : oauthStatus.step === 'apiKey' ? 'sk-...' : isOpenAIProvider ? 'gpt-4o-mini' : 'claude-3-5-sonnet-latest';
+        const placeholder = oauthStatus.step === 'baseURL' ? isOpenAIProvider ? 'http(s)://your-openai-compatible-endpoint.example.com' : isGeminiProvider ? 'https://generativelanguage.googleapis.com/v1beta' : 'http(s)://your-anthropic-compatible-endpoint.example.com' : oauthStatus.step === 'apiKey' ? 'sk-...' : isOpenAIProvider ? 'gpt-4o-mini' : isGeminiProvider ? 'gemini-2.5-pro' : 'claude-3-5-sonnet-latest';
         const mask = oauthStatus.step === 'apiKey' ? '*' : undefined;
-        return <Box flexDirection="column" gap={1} marginTop={1}><Text bold={true}>Configure compatible interfaces</Text><Text>{compatibleApiProvider === 'openai' ? `Current selection: ${openAIFormatLabel}` : 'Current selection: Anthropic Messages compatible format'}</Text><Text>{label}</Text><Box flexDirection="row"><TextInput value={value} onChange={onChange} onSubmit={handleSubmitCustomConfig} onIsPastingChange={setIsCustomInputPasting} cursorOffset={cursorOffset} onChangeCursorOffset={setCursorOffset} columns={oauthStatus.step === 'baseURL' ? Math.max(20, textInputColumns - 12) : textInputColumns} focus={true} showCursor={true} placeholder={placeholder} mask={mask} dimColor={oauthStatus.step === 'model' && value.length === 0} />{oauthStatus.step === 'baseURL' ? <Text dimColor={true}>{isOpenAIProvider ? openAIPathSuffix : '/v1/messages'}</Text> : null}</Box><Text dimColor={true}>{isCustomInputPasting ? 'Press Enter to save the current item and continue.' : 'Press Enter to save the current item and continue.'}</Text></Box>;
+        return <Box flexDirection="column" gap={1} marginTop={1}><Text bold={true}>Configure compatible interfaces</Text><Text>{`Current selection: ${currentProviderLabel}`}</Text><Text>{label}</Text><Box flexDirection="row"><TextInput value={value} onChange={onChange} onSubmit={handleSubmitCustomConfig} onIsPastingChange={setIsCustomInputPasting} cursorOffset={cursorOffset} onChangeCursorOffset={setCursorOffset} columns={oauthStatus.step === 'baseURL' ? Math.max(20, textInputColumns - 12) : textInputColumns} focus={true} showCursor={true} placeholder={placeholder} mask={mask} dimColor={oauthStatus.step === 'model' && value.length === 0} />{oauthStatus.step === 'baseURL' ? <Text dimColor={true}>{pathSuffix}</Text> : null}</Box><Text dimColor={true}>{isCustomInputPasting ? 'Press Enter to save the current item and continue.' : 'Press Enter to save the current item and continue.'}</Text></Box>;
       }
     case "idle":
       {

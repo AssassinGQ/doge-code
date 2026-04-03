@@ -265,7 +265,13 @@ export function Config({
   }
 
   const customApiProvider = getGlobalConfig().customApiEndpoint?.provider;
-  const customApiProviderDisplay = customApiProvider === 'openai' ? 'OpenAI-compatible' : customApiProvider === 'anthropic' ? 'Anthropic-compatible' : 'Not set';
+  const customApiProviderDisplay = customApiProvider === 'openai'
+    ? 'OpenAI-compatible'
+    : customApiProvider === 'gemini'
+      ? 'Gemini API'
+      : customApiProvider === 'anthropic'
+        ? 'Anthropic-compatible'
+        : 'Not set';
 
   // TODO: Add MCP servers
   const settingsItems: Setting[] = [
@@ -274,10 +280,10 @@ export function Config({
     id: 'customApiProvider',
     label: `Compatible API provider: ${customApiProviderDisplay}`,
     value: customApiProviderDisplay,
-    options: ['Anthropic-compatible', 'OpenAI-compatible'],
+    options: ['Anthropic-compatible', 'OpenAI-compatible', 'Gemini API'],
     type: 'enum' as const,
     onChange(value: string) {
-      const nextProvider = value === 'OpenAI-compatible' ? 'openai' : value === 'Anthropic-compatible' ? 'anthropic' : undefined;
+      const nextProvider = value === 'OpenAI-compatible' ? 'openai' : value === 'Gemini API' ? 'gemini' : value === 'Anthropic-compatible' ? 'anthropic' : undefined;
       saveGlobalConfig(current => ({
         ...current,
         customApiEndpoint: {

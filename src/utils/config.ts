@@ -182,7 +182,7 @@ export type OutputStyle = string
 
 export type GlobalConfig = {
   customApiEndpoint?: {
-    provider?: 'anthropic' | 'openai'
+    provider?: 'anthropic' | 'openai' | 'gemini'
     openaiCompatMode?: 'chat_completions' | 'responses'
     baseURL?: string
     apiKey?: string

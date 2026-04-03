@@ -146,7 +146,7 @@ export function getAgentModelOptions(): AgentModelOption[] {
     getGlobalConfig().customApiEndpoint?.provider ??
     'anthropic'
 
-  if (customApiProvider === 'openai' || customModels.length > 0) {
+  if (customApiProvider === 'openai' || customApiProvider === 'gemini' || customModels.length > 0) {
     return [
       ...[...new Set(customModels)].map(model => ({
         value: model,
