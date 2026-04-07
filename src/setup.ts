@@ -398,7 +398,7 @@ export async function setup(
     allowDangerouslySkipPermissions
   ) {
     // Check if running as root/sudo on Unix-like systems
-    // Allow root if in a sandbox (e.g., TPU devspaces that require root)
+    // Doge-code fork: Allow root with --dangerously-skip-permissions
     if (
       process.platform !== 'win32' &&
       typeof process.getuid === 'function' &&
@@ -406,11 +406,7 @@ export async function setup(
       process.env.IS_SANDBOX !== '1' &&
       !isEnvTruthy(process.env.CLAUDE_CODE_BUBBLEWRAP)
     ) {
-      // biome-ignore lint/suspicious/noConsole:: intentional console output
-      console.error(
-        `--dangerously-skip-permissions cannot be used with root/sudo privileges for security reasons`,
-      )
-      process.exit(1)
+      // Allow root - skip the security check
     }
 
     if (
