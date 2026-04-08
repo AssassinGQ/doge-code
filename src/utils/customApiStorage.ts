@@ -6,6 +6,7 @@ export type CustomApiProvider = 'anthropic' | 'openai' | 'gemini'
 
 export type CustomApiStorageData = {
   provider?: CustomApiProvider
+  providers?: Record<string, CustomApiProvider>
   openaiCompatMode?: OpenAICompatMode
   baseURL?: string
   apiKey?: string
@@ -35,8 +36,26 @@ export function readCustomApiStorage(): CustomApiStorageData {
         ? 'chat_completions'
         : undefined
 
+  const validProviders = ['openai', 'anthropic', 'gemini'] as const
+
+  const parseProviders = (
+    raw: unknown,
+  ): Record<string, CustomApiProvider> | undefined => {
+    if (!raw || typeof raw !== 'object') return undefined
+    const entries = Object.entries(raw as Record<string, unknown>)
+    if (entries.length === 0) return undefined
+    const parsed: Record<string, CustomApiProvider> = {}
+    for (const [key, val] of entries) {
+      if (validProviders.includes(val as string)) {
+        parsed[key] = val as CustomApiProvider
+      }
+    }
+    return Object.keys(parsed).length > 0 ? parsed : undefined
+  }
+
   return {
     provider,
+    providers: parseProviders(value.providers),
     openaiCompatMode,
     baseURL: typeof value.baseURL === 'string' ? value.baseURL : undefined,
     apiKey: typeof value.apiKey === 'string' ? value.apiKey : undefined,
