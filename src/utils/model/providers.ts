@@ -1,5 +1,7 @@
 import type { AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS } from '../../services/analytics/index.js'
 import { isEnvTruthy } from '../envUtils.js'
+import { readCustomApiStorage } from '../customApiStorage.js'
+import type { CustomApiProvider } from '../customApiStorage.js'
 
 export type APIProvider = 'firstParty' | 'bedrock' | 'vertex' | 'foundry'
 
@@ -37,4 +39,15 @@ export function isFirstPartyAnthropicBaseUrl(): boolean {
   } catch {
     return false
   }
+}
+
+export function getProviderForModel(model: string): CustomApiProvider {
+  const customApiConfig = readCustomApiStorage()
+  if (customApiConfig.providers?.[model]) {
+    return customApiConfig.providers[model]
+  }
+  if (customApiConfig.provider) {
+    return customApiConfig.provider
+  }
+  return 'anthropic'
 }
