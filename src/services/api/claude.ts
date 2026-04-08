@@ -22,6 +22,7 @@ import type { Stream } from '@anthropic-ai/sdk/streaming.mjs'
 import { randomUUID } from 'crypto'
 import {
   getAPIProvider,
+  getProviderForModel,
   isFirstPartyAnthropicBaseUrl,
 } from 'src/utils/model/providers.js'
 import { readCustomApiStorage } from 'src/utils/customApiStorage.js'
@@ -1825,7 +1826,7 @@ async function* queryModel(
           ...(getGlobalConfig().customApiEndpoint ?? {}),
           ...readCustomApiStorage(),
         }
-        const compatProvider = customApiConfig.provider ?? 'anthropic'
+        const compatProvider = getProviderForModel(params.model)
         const openAICompatMode = customApiConfig.openaiCompatMode ?? 'chat_completions'
         if (compatProvider === 'gemini') {
           const geminiRequest = convertAnthropicRequestToGemini({
@@ -1846,8 +1847,8 @@ async function* queryModel(
           }
           const reader = await createGeminiCompatStream(
             {
-              apiKey: process.env.DOGE_API_KEY || '',
-              baseURL: process.env.ANTHROPIC_BASE_URL || '',
+              apiKey: customApiConfig.apiKey || process.env.DOGE_API_KEY || '',
+              baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
               headers: clientRequestId
                 ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
                 : undefined,
@@ -1865,8 +1866,8 @@ async function* queryModel(
         }
         if (compatProvider === 'openai') {
           const compatConfig = {
-            apiKey: process.env.DOGE_API_KEY || '',
-            baseURL: process.env.ANTHROPIC_BASE_URL || '',
+            apiKey: customApiConfig.apiKey || process.env.DOGE_API_KEY || '',
+            baseURL: customApiConfig.baseURL || process.env.ANTHROPIC_BASE_URL || '',
             headers: clientRequestId
               ? { [CLIENT_REQUEST_ID_HEADER]: clientRequestId }
               : undefined,
