@@ -1,13 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'bun:test'
+import { describe, it, expect, vi } from 'bun:test'
 import { readCustomApiStorage } from './customApiStorage'
-
-// Mock getSecureStorage
-vi.mock('./secureStorage/index.js', () => ({
-  getSecureStorage: () => ({
-    read: () => ({}),
-    update: () => ({ success: true }),
-  }),
-}))
 
 describe('CustomApiStorage', () => {
   describe('readCustomApiStorage', () => {
@@ -54,7 +46,7 @@ describe('CustomApiStorage', () => {
       })
     })
 
-    it('prefers providers map over legacy provider', () => {
+    it('returns both provider and providers when both are set', () => {
       const mockData: Record<string, unknown> = {
         customApiEndpoint: {
           provider: 'openai',

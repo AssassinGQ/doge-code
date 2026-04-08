@@ -2,7 +2,8 @@ import { getSecureStorage } from './secureStorage/index.js'
 
 export type OpenAICompatMode = 'chat_completions' | 'responses'
 
-export type CustomApiProvider = 'anthropic' | 'openai' | 'gemini'
+const VALID_PROVIDERS = ['anthropic', 'openai', 'gemini'] as const
+export type CustomApiProvider = typeof VALID_PROVIDERS[number]
 
 export type CustomApiStorageData = {
   provider?: CustomApiProvider
@@ -16,6 +17,21 @@ export type CustomApiStorageData = {
 
 const CUSTOM_API_STORAGE_KEY = 'customApiEndpoint'
 
+function parseProviders(
+  raw: unknown,
+): Record<string, CustomApiProvider> | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const entries = Object.entries(raw as Record<string, unknown>)
+  if (entries.length === 0) return undefined
+  const parsed: Record<string, CustomApiProvider> = {}
+  for (const [key, val] of entries) {
+    if (VALID_PROVIDERS.includes(val as string)) {
+      parsed[key] = val as CustomApiProvider
+    }
+  }
+  return Object.keys(parsed).length > 0 ? parsed : undefined
+}
+
 export function readCustomApiStorage(): CustomApiStorageData {
   const storage = getSecureStorage() as {
     read?: () => Record<string, unknown> | null
@@ -25,33 +41,15 @@ export function readCustomApiStorage(): CustomApiStorageData {
   const raw = data[CUSTOM_API_STORAGE_KEY]
   if (!raw || typeof raw !== 'object') return {}
   const value = raw as Record<string, unknown>
-  const provider =
-    value.provider === 'openai' || value.provider === 'anthropic' || value.provider === 'gemini'
-      ? value.provider
-      : undefined
+  const provider = VALID_PROVIDERS.includes(value.provider as string)
+    ? (value.provider as CustomApiProvider)
+    : undefined
   const openaiCompatMode =
     value.openaiCompatMode === 'chat_completions' || value.openaiCompatMode === 'responses'
       ? value.openaiCompatMode
       : provider === 'openai'
         ? 'chat_completions'
         : undefined
-
-  const validProviders = ['openai', 'anthropic', 'gemini'] as const
-
-  const parseProviders = (
-    raw: unknown,
-  ): Record<string, CustomApiProvider> | undefined => {
-    if (!raw || typeof raw !== 'object') return undefined
-    const entries = Object.entries(raw as Record<string, unknown>)
-    if (entries.length === 0) return undefined
-    const parsed: Record<string, CustomApiProvider> = {}
-    for (const [key, val] of entries) {
-      if (validProviders.includes(val as string)) {
-        parsed[key] = val as CustomApiProvider
-      }
-    }
-    return Object.keys(parsed).length > 0 ? parsed : undefined
-  }
 
   return {
     provider,
