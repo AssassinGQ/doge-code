@@ -30,6 +30,9 @@ export const call: LocalCommandCall = async (args, _context) => {
     customApiEndpoint: {
       ...current.customApiEndpoint,
       model: nextCurrentModel,
+      providers: Object.fromEntries(
+        Object.entries(current.customApiEndpoint?.providers ?? {}).filter(([model]) => model !== targetModel)
+      ),
       savedModels: remainingModels,
     },
   }))
@@ -37,6 +40,9 @@ export const call: LocalCommandCall = async (args, _context) => {
   writeCustomApiStorage({
     ...secureStored,
     model: nextCurrentModel,
+    providers: Object.fromEntries(
+      Object.entries(secureStored.providers ?? {}).filter(([model]) => model !== targetModel)
+    ),
     savedModels: remainingModels
   })
 
