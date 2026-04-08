@@ -4,10 +4,15 @@ import { useAppState } from '../state/AppState.js'
 import type { Message } from '../types/message.js'
 import { isAgentSwarmsEnabled } from '../utils/agentSwarmsEnabled.js'
 import {
+  getAssistantMessageText,
+  getUserMessageText,
+} from '../utils/messages.js'
+import {
   cleanMessagesForLogging,
   isChainParticipant,
   recordTranscript,
 } from '../utils/sessionStorage.js'
+import { addToLiveChatLog } from '../history.js'
 
 /**
  * Hook that logs messages to the transcript
@@ -87,6 +92,17 @@ export function useLogMessages(messages: Message[], ignore: boolean = false) {
         lastParentUuidRef.current = lastRecordedUuid
       }
     })
+
+    // Fire and forget live chat log (for tail -f)
+    for (const msg of slice) {
+      if (msg.type === 'user') {
+        const text = getUserMessageText(msg)
+        if (text) addToLiveChatLog('user', text)
+      } else if (msg.type === 'assistant') {
+        const text = getAssistantMessageText(msg)
+        if (text) addToLiveChatLog('assistant', text)
+      }
+    }
 
     // Sync-walk safe for: incremental (pure new-tail slice), first-render
     // (no messagesToKeep interleaving), and same-head shrink. Shrink is the

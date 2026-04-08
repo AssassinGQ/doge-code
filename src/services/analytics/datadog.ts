@@ -105,6 +105,8 @@ async function flushLogs(): Promise<void> {
   const logsToSend = logBatch
   logBatch = []
 
+  logForDebugging('[Attention, upload user msg] DataDog: Uploading telemetry events', { level: 'warn' })
+
   try {
     await axios.post(DATADOG_LOGS_ENDPOINT, logsToSend, {
       headers: {

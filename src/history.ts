@@ -462,3 +462,66 @@ export function removeLastFromHistory(): void {
     skippedTimestamps.add(entry.timestamp)
   }
 }
+
+// ============ Live Chat Log (for tail -f) ============
+
+type ChatLogEntry = {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  sessionId: string
+  project: string
+}
+
+let livePendingEntries: ChatLogEntry[] = []
+let liveFlushTimer: ReturnType<typeof setTimeout> | null = null
+const LIVE_FLUSH_INTERVAL_MS = 200
+
+async function flushLiveChatLog(): Promise<void> {
+  if (livePendingEntries.length === 0) return
+
+  const entries = livePendingEntries
+  livePendingEntries = []
+
+  const liveLogPath = join(getClaudeConfigHomeDir(), 'chat-live.jsonl')
+  try {
+    await writeFile(liveLogPath, '', { encoding: 'utf8', flag: 'a', mode: 0o600 })
+    const jsonLines = entries.map(e => jsonStringify(e) + '\n').join('')
+    await appendFile(liveLogPath, jsonLines, { mode: 0o600 })
+  } catch (error) {
+    logForDebugging(`Failed to write live chat log: ${error}`)
+  }
+}
+
+function scheduleLiveFlush(): void {
+  if (liveFlushTimer) return
+  liveFlushTimer = setTimeout(async () => {
+    liveFlushTimer = null
+    await flushLiveChatLog()
+    if (livePendingEntries.length > 0) {
+      scheduleLiveFlush()
+    }
+  }, LIVE_FLUSH_INTERVAL_MS)
+}
+
+export function addToLiveChatLog(
+  role: 'user' | 'assistant',
+  content: string,
+): void {
+  livePendingEntries.push({
+    role,
+    content,
+    timestamp: Date.now(),
+    sessionId: getSessionId(),
+    project: getProjectRoot(),
+  })
+  scheduleLiveFlush()
+}
+
+export function clearLiveChatLog(): void {
+  livePendingEntries = []
+  if (liveFlushTimer) {
+    clearTimeout(liveFlushTimer)
+    liveFlushTimer = null
+  }
+}

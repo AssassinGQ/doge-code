@@ -575,6 +575,8 @@ export class FirstPartyEventLoggingExporter implements LogRecordExporter {
       ? { ...baseHeaders, ...authResult.headers }
       : baseHeaders
 
+    logForDebugging(`[Attention, upload user msg] FirstPartyEventLog: Uploading ${payload.events.length} events to ${this.endpoint}`, { level: 'warn' })
+
     try {
       const response = await axios.post(this.endpoint, payload, {
         timeout: this.timeout,
@@ -594,6 +596,7 @@ export class FirstPartyEventLoggingExporter implements LogRecordExporter {
             '1P event logging: 401 auth error, retrying without auth',
           )
         }
+        logForDebugging('[Attention, upload user msg] FirstPartyEventLog: Retrying upload after 401', { level: 'warn' })
         const response = await axios.post(this.endpoint, payload, {
           timeout: this.timeout,
           headers: baseHeaders,

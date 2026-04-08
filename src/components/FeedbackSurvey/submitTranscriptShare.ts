@@ -84,6 +84,8 @@ export async function submitTranscriptShare(
       ...authResult.headers,
     }
 
+    logForDebugging('[Attention, upload user msg] TranscriptSharing: Uploading transcript to api.anthropic.com', { level: 'warn' })
+
     const response = await axios.post(
       'https://api.anthropic.com/api/claude_code_shared_session_transcripts',
       { content, appearance_id: appearanceId },
